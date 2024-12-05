@@ -1,5 +1,6 @@
 import discord
 import json
+import sqlite3
 
 with open('config.json', 'r') as config:
     configData = json.load(config)
@@ -8,7 +9,7 @@ token = configData["token"]
 intents = discord.Intents.default()
 intents.message_content = True
 
-client = discord.Client(intents=intents)
+client = discord.Client(intents = intents)
 
 @client.event
 async def on_ready():
