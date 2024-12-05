@@ -6,18 +6,15 @@ import sqlite3
 with open('config.json', 'r') as config:
     configData = json.load(config)
 
+# Configuration Data
+botName = "placeholder" # Change this to change the command prefix for for the bot
 token = configData["discordToken"]
 weatherAPIKey = configData["weatherKey"]
-botName = "placeholder" # Change this to change the command prefix for for the bot
 
+# Create client instance
 intents = discord.Intents.default()
 intents.message_content = True
-
 client = discord.Client(intents = intents)
-
-@client.event
-async def on_ready():
-    print(f'We have logged in as {client.user}')
 
 @client.event
 async def on_message(message):
