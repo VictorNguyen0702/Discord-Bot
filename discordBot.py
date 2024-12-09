@@ -15,6 +15,9 @@ weatherAPIKey = configData["weatherKey"]
 intents = discord.Intents.default()
 intents.message_content = True
 client = discord.Client(intents = intents)
+conn = sqlite3.connect("userData.db")
+cur = conn.cursor()
+
 
 @client.event
 async def on_message(message):
@@ -31,11 +34,18 @@ async def on_message(message):
                 weatherResponse = await weather(messageContent, userId)
                 await message.channel.send(weatherResponse)
             case "defaultLocation":
-                return
+                pass
 
 async def weather(messageContent, userID):
     # Get default city from database depending on the user, otherwise set to Sydney
-    defaultCity = "Sydney"
+    cur.execute(f"""SELECT defaultLocation
+                      FROM DefaultLocation
+                     WHERE userID = {userID}""")
+    result = cur.fetchone()
+    if result != None:
+        defaultCity = result[0]
+    else:
+        defaultCity = "Sydney"
 
     city = " ".join(messageContent[2:]) if len(messageContent) > 2 else defaultCity
     url = f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={weatherAPIKey}&units=metric"
@@ -52,4 +62,5 @@ async def weather(messageContent, userID):
                 return weather_info
             else:
                 return f"Could not fetch weather for {city}"
+            
 client.run(token)
