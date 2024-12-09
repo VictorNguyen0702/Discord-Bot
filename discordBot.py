@@ -82,13 +82,13 @@ async def addDefaultCity(messageContent, userId, userName):
                       FROM DefaultCity
                      WHERE userID = {userId}""")
     result = cur.fetchone()
-    print(result)
     if result != None:
-        cur.execute(f"""DELETE FROM defaultCity
+        cur.execute(f"""UPDATE DefaultCity
+                           SET defaultCity = '{city}'
                         WHERE userID = {userId}""")
-        print("deleted")
-    cur.execute(f"""INSERT INTO DefaultCity (userID, defaultCity)
-                    VALUES ({userId}, '{city}');""")
+    else:
+        cur.execute(f"""INSERT INTO DefaultCity (userID, defaultCity)
+                         VALUES ({userId}, '{city}');""")
     
     return f"Default city for {userName} updated to {city}"
 
