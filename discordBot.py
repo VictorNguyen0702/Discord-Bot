@@ -24,6 +24,8 @@ async def on_message(message):
     if message.content.startswith(f'${botName}'):
         messageContent = message.content.split(" ")
         userId = message.author.id
+        userName = message.author.name
+
 
         if len(messageContent) == 1:
             return
@@ -34,13 +36,14 @@ async def on_message(message):
                 weatherResponse = await weather(messageContent, userId)
                 await message.channel.send(weatherResponse)
             case "defaultLocation":
-                pass
+                locationResponse = await addDefaultCity(messageContent, userId, userName)
+                await message.channel.send(locationResponse)
 
-async def weather(messageContent, userID):
+async def weather(messageContent, userId):
     # Get default city from database depending on the user, otherwise set to Sydney
-    cur.execute(f"""SELECT defaultLocation
-                      FROM DefaultLocation
-                     WHERE userID = {userID}""")
+    cur.execute(f"""SELECT defaultCity
+                      FROM DefaultCity
+                     WHERE userID = {userId}""")
     result = cur.fetchone()
     if result != None:
         defaultCity = result[0]
@@ -63,4 +66,30 @@ async def weather(messageContent, userID):
             else:
                 return f"Could not fetch weather for {city}"
             
+async def addDefaultCity(messageContent, userId, userName):
+    if not len(messageContent) > 2:
+        return "No city was selected"
+
+    city = " ".join(messageContent[2:])
+
+    url = f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={weatherAPIKey}&units=metric"
+    async with aiohttp.ClientSession() as session:  # Creates asynchronous HTTP session
+        async with session.get(url) as response: # Sends a get request to the URL
+            if response.status != 200:  # Code 200 is returned for successful processing
+                return "City was not found"
+
+    cur.execute(f"""SELECT defaultCity
+                      FROM DefaultCity
+                     WHERE userID = {userId}""")
+    result = cur.fetchone()
+    print(result)
+    if result != None:
+        cur.execute(f"""DELETE FROM defaultCity
+                        WHERE userID = {userId}""")
+        print("deleted")
+    cur.execute(f"""INSERT INTO DefaultCity (userID, defaultCity)
+                    VALUES ({userId}, '{city}');""")
+    
+    return f"Default city for {userName} updated to {city}"
+
 client.run(token)
